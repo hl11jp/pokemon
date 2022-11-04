@@ -4,18 +4,38 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { Pokemon } from "../../types";
 import styles from "../../styles/Details.module.css";
-import { GetServerSideProps } from "next";
+import { GetServerSideProps, GetStaticPaths, GetStaticProps } from "next";
 
-export const getServerSideProps: GetServerSideProps = async ({params}) => {
-    const res = await fetch(`https://jherr-pokemon.s3.us-west-1.amazonaws.com/pokemon/${params.id}.json`);
-    return {
-      props: {
-        pokemon: await res.json()
-      }
-    }
-}
+//with a dynamic page like this
+// you'll need to know what all the routes are when doing static site generate
 
-export default function Details({pokemon}) {
+export const getStaticPaths: GetStaticPaths = async () => {
+  const res = await fetch(
+    "https://jherr-pokemon.s3.us-west-1.amazonaws.com/index.json"
+  );
+
+  const pokemon = await res.json();
+
+  return {
+    paths: pokemon.map((pokemon) => ({
+      params: { id: pokemon.id.toString() },
+    })),
+    fallback: false,
+  };
+};
+
+export const getStaticProps: GetStaticProps = async ({ params }) => {
+  const res = await fetch(
+    `https://jherr-pokemon.s3.us-west-1.amazonaws.com/pokemon/${params.id}.json`
+  );
+  return {
+    props: {
+      pokemon: await res.json(),
+    },
+  };
+};
+
+export default function Details({ pokemon }) {
   // const router = useRouter();
   // const id = router.query.id;
   //or
@@ -25,23 +45,26 @@ export default function Details({pokemon}) {
 
   // useEffect(() => {
   //   async function getPokemon() {
-      
+
   //   }
   //   getPokemon();
   // })
 
   // if (!pokemon) return null;
 
-  return(
+  return (
     <div>
       <Head>
         <title>{pokemon.name}</title>
       </Head>
-      <Link href="/">Back to home
-      </Link>
+      <Link href="/">Back to home</Link>
       <div className={styles.layout}>
         <div>
-          <img className={styles.picture} src={`https://jherr-pokemon.s3.us-west-1.amazonaws.com/${pokemon.image}`} alt={pokemon.name}/>
+          <img
+            className={styles.picture}
+            src={`https://jherr-pokemon.s3.us-west-1.amazonaws.com/${pokemon.image}`}
+            alt={pokemon.name}
+          />
         </div>
         <div>
           <div className={styles.name}>{pokemon.name}</div>
@@ -55,7 +78,7 @@ export default function Details({pokemon}) {
             </tr>
           </thead>
           <tbody>
-            {pokemon.stats.map(({name, value}) => (
+            {pokemon.stats.map(({ name, value, id }) => (
               <tr>
                 <td className={styles.attribute}>{name}</td>
                 <td>{value}</td>
@@ -65,5 +88,5 @@ export default function Details({pokemon}) {
         </table>
       </div>
     </div>
-  )
+  );
 }
