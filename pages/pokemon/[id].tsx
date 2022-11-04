@@ -32,6 +32,8 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
     props: {
       pokemon: await res.json(),
     },
+    //added revalidate so the page can update with new changes after 30s
+    revalidate: 30
   };
 };
 
